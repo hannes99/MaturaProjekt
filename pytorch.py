@@ -1,37 +1,32 @@
 from __future__ import print_function
-import argparse
-import numpy as np
 
-import cv2
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from PIL import Image
-from torchvision import datasets, transforms
 from torch.autograd import Variable
-from torchvision.datasets import ImageFolder
+from torchvision import datasets, transforms
 
-learn_rate = 0.5
+learn_rate = 0.01
 sgd_momentum = 0.5
 cuda = True
 epochs = 10
 seed = 1
-batch_size = 100
+batch_size = 64
 test_batch_size = 1000
-log_intervall = 1000
+log_intervall = 10
 
 TRAIN = False
 if TRAIN:
     # Training settings
 
-    cuda = not cuda and torch.cuda.is_available()
+    cuda = cuda and torch.cuda.is_available()
 
     torch.manual_seed(1)
     if cuda:
         torch.cuda.manual_seed(1)
 
-    kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
+    kwargs = {'num_workers': 1, 'pin_memory': True} if cuda else {}
     train_loader = torch.utils.data.DataLoader(
         datasets.MNIST('PT/data', train=True, download=True,
                        transform=transforms.Compose([
@@ -67,13 +62,10 @@ class Net(nn.Module):
         return F.log_softmax(x, dim=1)
 
 
-
-
-
 def train(epoch):
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
-        if args.cuda:
+        if cuda:
             data, target = data.cuda(), target.cuda()
         data, target = Variable(data), Variable(target)
         optimizer.zero_grad()
@@ -118,10 +110,13 @@ model.eval()
 if TRAIN:
     for epoch in range(1, epochs + 1):
         train(epoch)
-        if epoch % 1 is 0:
+        if epoch % 10 is 0:
             test()
+        if epoch % 100 is 0:
+            torch.save(model.cuda().state_dict(), "PT/netsave")
+
     torch.save(model.cuda().state_dict(), "PT/netsave")
 
-#test()
+# test()
 
 # print(model(image_loader("dddd.jpg")).data.max(1, keepdim=True)[1])

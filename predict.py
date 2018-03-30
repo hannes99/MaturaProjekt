@@ -1,9 +1,9 @@
+import threading
+
 import cv2
 import numpy as np
 import tensorflow as tf
 from skimage.feature import hog
-import threading
-
 from torch.autograd import Variable
 from torchvision.transforms import transforms
 
@@ -22,13 +22,14 @@ def threaded_predict(x, clf_name, clf, all):
     all[clf_name] = pred[1]
 
 
+# only one used
 def predict_using_pytorch_cnn(img, clsf):
     imsize = 28
     loader = transforms.Compose([transforms.Resize(imsize), transforms.CenterCrop(28), transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
     image = loader(img).float()
     image = Variable(image, requires_grad=True)
-    image = image.unsqueeze(0)  # this is for VGG, may not be needed for ResNet
-      # assumes that you're using GPU
+    image = image.unsqueeze(0)
+
     pred = clsf(image.cuda()).data.max(1, keepdim=True)
     return pred[1][0][0], pred[0][0][0]
 
